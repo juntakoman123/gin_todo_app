@@ -2,20 +2,36 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/juntakoman123/gin_todo_app/config"
+	"github.com/juntakoman123/gin_todo_app/controller"
+	"github.com/juntakoman123/gin_todo_app/model"
+	"github.com/juntakoman123/gin_todo_app/repository"
+	"github.com/juntakoman123/gin_todo_app/service"
 )
 
 func main() {
+
+	taskRepo := &repository.InMemoryTaskRepository{
+		Tasks: model.Tasks{
+			{ID: 1, Title: "Task 1", Status: model.TaskStatusTodo},
+			{ID: 2, Title: "Task 2", Status: model.TaskStatusTodo},
+		},
+	}
+
+	taskService := service.TaskService{
+		TaskRepo: taskRepo,
+	}
+
+	taskController := &controller.TaskController{
+		TaskService: taskService,
+	}
+
 	router := gin.Default()
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
+
+	router.GET("/tasks", taskController.GetTasks)
 
 	cfg, err := config.New()
 	if err != nil {
