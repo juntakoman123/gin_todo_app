@@ -1,5 +1,5 @@
 package todo
 
 type Store interface {
-	GetTasks() Tasks
+	GetTasks() (Tasks, error)
 }
