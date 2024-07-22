@@ -1,87 +1,59 @@
 package main
 
-import (
-	"fmt"
-	"net/http"
-	"os"
-	"time"
+// type TaskController struct {
+// 	TaskService TaskService
+// }
 
-	"github.com/gin-gonic/gin"
-	"github.com/juntakoman123/gin_todo_app/config"
-)
+// func (tc *TaskController) GetTasks(c *gin.Context) {
+// 	tasks := tc.TaskService.GetTasks()
+// 	c.JSON(http.StatusOK, tasks)
+// }
 
-type TaskID int64
-type TaskStatus string
+// type TaskService struct {
+// 	TaskRepo TaskRepository
+// }
 
-const (
-	TaskStatusTodo  TaskStatus = "todo"
-	TaskStatusDoing TaskStatus = "doing"
-	TaskStatusDone  TaskStatus = "done"
-)
+// func (ts *TaskService) GetTasks() Tasks {
+// 	return ts.TaskRepo.GetTasks()
+// }
 
-type Task struct {
-	ID      TaskID     `json:"id"`
-	Title   string     `json:"title"`
-	Status  TaskStatus `json:"status"`
-	Created time.Time  `json:"created"`
-}
+// type TaskRepository interface {
+// 	GetTasks() Tasks
+// }
 
-type Tasks []*Task
+// type InMemoryTaskRepository struct {
+// 	Tasks Tasks
+// }
 
-type TaskController struct {
-	TaskService TaskService
-}
+// func (repo *InMemoryTaskRepository) GetTasks() Tasks {
+// 	return repo.Tasks
+// }
 
-func (tc *TaskController) GetTasks(c *gin.Context) {
-	tasks := tc.TaskService.GetTasks()
-	c.JSON(http.StatusOK, tasks)
-}
+func main() {}
 
-type TaskService struct {
-	TaskRepo TaskRepository
-}
+// 	taskRepo := &InMemoryTaskRepository{
+// 		Tasks: Tasks{
+// 			{ID: 1, Title: "Task 1", Status: TaskStatusTodo},
+// 			{ID: 2, Title: "Task 2", Status: TaskStatusTodo},
+// 		},
+// 	}
 
-func (ts *TaskService) GetTasks() Tasks {
-	return ts.TaskRepo.GetTasks()
-}
+// 	taskService := TaskService{
+// 		TaskRepo: taskRepo,
+// 	}
 
-type TaskRepository interface {
-	GetTasks() Tasks
-}
+// 	taskController := &TaskController{
+// 		TaskService: taskService,
+// 	}
 
-type InMemoryTaskRepository struct {
-	Tasks Tasks
-}
+// 	router := gin.Default()
 
-func (repo *InMemoryTaskRepository) GetTasks() Tasks {
-	return repo.Tasks
-}
+// 	router.GET("/tasks", taskController.GetTasks)
 
-func main() {
+// 	cfg, err := config.New()
+// 	if err != nil {
+// 		os.Exit(1)
+// 	}
 
-	taskRepo := &InMemoryTaskRepository{
-		Tasks: Tasks{
-			{ID: 1, Title: "Task 1", Status: TaskStatusTodo},
-			{ID: 2, Title: "Task 2", Status: TaskStatusTodo},
-		},
-	}
-
-	taskService := TaskService{
-		TaskRepo: taskRepo,
-	}
-
-	taskController := &TaskController{
-		TaskService: taskService,
-	}
-
-	router := gin.Default()
-
-	router.GET("/tasks", taskController.GetTasks)
-
-	cfg, err := config.New()
-	if err != nil {
-		os.Exit(1)
-	}
-
-	router.Run(fmt.Sprintf(":%d", cfg.Port))
-}
+// 	router.Run(fmt.Sprintf(":%d", cfg.Port))
+// }
