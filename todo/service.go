@@ -5,11 +5,15 @@ type Service interface {
 }
 
 type ImplService struct {
-	store Store
+	Store Store
+}
+
+func NewImplService(store Store) *ImplService {
+	return &ImplService{store}
 }
 
 func (s *ImplService) GetTasks() (Tasks, error) {
-	tasks, err := s.store.GetTasks()
+	tasks, err := s.Store.GetTasks()
 
 	if err != nil {
 		return Tasks{}, err

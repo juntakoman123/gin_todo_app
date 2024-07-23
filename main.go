@@ -4,20 +4,21 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gin-gonic/gin"
 	"github.com/juntakoman123/gin_todo_app/config"
+	"github.com/juntakoman123/gin_todo_app/todo"
 )
 
 func main() {
 
-	router := gin.Default()
-	// router.GET("/tasks", todo.handlerGetTasks)
+	store := todo.InMemoryStore{}
+	service := todo.NewImplService(&store)
+	server := todo.NewServer(service)
 
 	cfg, err := config.New()
 	if err != nil {
 		os.Exit(1)
 	}
 
-	router.Run(fmt.Sprintf(":%d", cfg.Port))
+	server.Run(fmt.Sprintf(":%d", cfg.Port))
 
 }
