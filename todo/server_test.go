@@ -10,6 +10,7 @@ import (
 
 type mockService struct {
 	getTasksFunc func() (Tasks, error)
+	tasksAdded   Tasks
 }
 
 func (s *mockService) GetTasks() (Tasks, error) {
@@ -62,6 +63,14 @@ func TestGetTasks(t *testing.T) {
 		server.ServeHTTP(res, req)
 
 		assertStatus(t, res, 500)
+
+	})
+
+}
+
+func TestAddTask(t *testing.T) {
+
+	t.Run("can add valid task", func(t *testing.T) {
 
 	})
 
