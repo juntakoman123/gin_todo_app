@@ -2,7 +2,6 @@ package todo
 
 import (
 	"errors"
-	"reflect"
 	"testing"
 )
 
@@ -33,7 +32,7 @@ func TestService(t *testing.T) {
 
 		store := stubStore{want}
 
-		service := Service{&store}
+		service := ImplService{&store}
 		got, err := service.GetTasks()
 
 		assertNoError(t, err)
@@ -50,7 +49,7 @@ func TestService(t *testing.T) {
 			{ID: 2, Title: "Task 2", Status: TaskStatusTodo},
 		}, wantErr}
 
-		service := Service{&store}
+		service := ImplService{&store}
 
 		got, err := service.GetTasks()
 
@@ -59,25 +58,4 @@ func TestService(t *testing.T) {
 
 	})
 
-}
-
-func assertTasks(t testing.TB, got, want Tasks) {
-	t.Helper()
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %v want %v", got, want)
-	}
-}
-
-func assertNoError(t testing.TB, err error) {
-	t.Helper()
-	if err != nil {
-		t.Fatalf("didn't expect an error but got one, %v", err)
-	}
-}
-
-func assertError(t *testing.T, got, want error) {
-	t.Helper()
-	if got != want {
-		t.Errorf("got %q want %q", got, want)
-	}
 }

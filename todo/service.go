@@ -1,10 +1,14 @@
 package todo
 
-type Service struct {
+type Service interface {
+	GetTasks() (Tasks, error)
+}
+
+type ImplService struct {
 	store Store
 }
 
-func (s *Service) GetTasks() (Tasks, error) {
+func (s *ImplService) GetTasks() (Tasks, error) {
 	tasks, err := s.store.GetTasks()
 
 	if err != nil {

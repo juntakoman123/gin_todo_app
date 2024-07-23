@@ -1,59 +1,23 @@
 package main
 
-// type TaskController struct {
-// 	TaskService TaskService
-// }
+import (
+	"fmt"
+	"os"
 
-// func (tc *TaskController) GetTasks(c *gin.Context) {
-// 	tasks := tc.TaskService.GetTasks()
-// 	c.JSON(http.StatusOK, tasks)
-// }
+	"github.com/gin-gonic/gin"
+	"github.com/juntakoman123/gin_todo_app/config"
+)
 
-// type TaskService struct {
-// 	TaskRepo TaskRepository
-// }
+func main() {
 
-// func (ts *TaskService) GetTasks() Tasks {
-// 	return ts.TaskRepo.GetTasks()
-// }
+	router := gin.Default()
+	// router.GET("/tasks", todo.handlerGetTasks)
 
-// type TaskRepository interface {
-// 	GetTasks() Tasks
-// }
+	cfg, err := config.New()
+	if err != nil {
+		os.Exit(1)
+	}
 
-// type InMemoryTaskRepository struct {
-// 	Tasks Tasks
-// }
+	router.Run(fmt.Sprintf(":%d", cfg.Port))
 
-// func (repo *InMemoryTaskRepository) GetTasks() Tasks {
-// 	return repo.Tasks
-// }
-
-func main() {}
-
-// 	taskRepo := &InMemoryTaskRepository{
-// 		Tasks: Tasks{
-// 			{ID: 1, Title: "Task 1", Status: TaskStatusTodo},
-// 			{ID: 2, Title: "Task 2", Status: TaskStatusTodo},
-// 		},
-// 	}
-
-// 	taskService := TaskService{
-// 		TaskRepo: taskRepo,
-// 	}
-
-// 	taskController := &TaskController{
-// 		TaskService: taskService,
-// 	}
-
-// 	router := gin.Default()
-
-// 	router.GET("/tasks", taskController.GetTasks)
-
-// 	cfg, err := config.New()
-// 	if err != nil {
-// 		os.Exit(1)
-// 	}
-
-// 	router.Run(fmt.Sprintf(":%d", cfg.Port))
-// }
+}
