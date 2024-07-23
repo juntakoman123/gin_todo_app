@@ -13,6 +13,7 @@ func NewImplService(store Store) *ImplService {
 }
 
 func (s *ImplService) GetTasks() (Tasks, error) {
+
 	tasks, err := s.Store.GetTasks()
 
 	if err != nil {

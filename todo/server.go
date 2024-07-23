@@ -23,7 +23,12 @@ type handler struct {
 
 func (h *handler) GetTasks(c *gin.Context) {
 
-	tasks, _ := h.service.GetTasks()
+	tasks, err := h.service.GetTasks()
+
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
 	c.JSON(http.StatusOK, tasks)
 
