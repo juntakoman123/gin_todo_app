@@ -13,9 +13,21 @@ var tasks = todo.Tasks{
 	{ID: 2, Title: "Task 2", Status: todo.TaskStatusTodo},
 }
 
+type inMemoryStore struct {
+	tasks todo.Tasks
+}
+
+func NewinMemoryStore(tasks todo.Tasks) *inMemoryStore {
+	return &inMemoryStore{tasks}
+}
+
+func (s *inMemoryStore) GetTasks() (todo.Tasks, error) {
+	return s.tasks, nil
+}
+
 func main() {
 
-	store := todo.NewinMemoryStore(tasks)
+	store := NewinMemoryStore(tasks)
 	service := todo.NewImplService(store)
 	server := todo.NewServer(service)
 
