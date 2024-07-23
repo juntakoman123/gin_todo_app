@@ -4,14 +4,14 @@ type Store interface {
 	GetTasks() (Tasks, error)
 }
 
-type InMemoryStore struct {
+type inMemoryStore struct {
+	tasks Tasks
 }
 
-func (s *InMemoryStore) GetTasks() (Tasks, error) {
+func NewinMemoryStore(tasks Tasks) *inMemoryStore {
+	return &inMemoryStore{tasks}
+}
 
-	return Tasks{
-		{ID: 1, Title: "Task 1", Status: TaskStatusTodo},
-		{ID: 2, Title: "Task 2", Status: TaskStatusTodo},
-	}, nil
-
+func (s *inMemoryStore) GetTasks() (Tasks, error) {
+	return s.tasks, nil
 }

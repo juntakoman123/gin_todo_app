@@ -8,10 +8,15 @@ import (
 	"github.com/juntakoman123/gin_todo_app/todo"
 )
 
+var tasks = todo.Tasks{
+	{ID: 1, Title: "Task 1", Status: todo.TaskStatusTodo},
+	{ID: 2, Title: "Task 2", Status: todo.TaskStatusTodo},
+}
+
 func main() {
 
-	store := todo.InMemoryStore{}
-	service := todo.NewImplService(&store)
+	store := todo.NewinMemoryStore(tasks)
+	service := todo.NewImplService(store)
 	server := todo.NewServer(service)
 
 	cfg, err := config.New()
