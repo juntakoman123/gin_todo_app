@@ -5,5 +5,11 @@ type Service struct {
 }
 
 func (s *Service) GetTasks() (Tasks, error) {
-	return s.store.GetTasks()
+	tasks, err := s.store.GetTasks()
+
+	if err != nil {
+		return Tasks{}, err
+	}
+
+	return tasks, nil
 }

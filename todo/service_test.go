@@ -15,11 +15,12 @@ func (s *stubStore) GetTasks() (Tasks, error) {
 }
 
 type errStubStore struct {
-	err error
+	tasks Tasks
+	err   error
 }
 
 func (e *errStubStore) GetTasks() (Tasks, error) {
-	return Tasks{}, e.err
+	return e.tasks, e.err
 }
 
 func TestService(t *testing.T) {
@@ -44,7 +45,11 @@ func TestService(t *testing.T) {
 		want := Tasks{}
 		wantErr := errors.New("db error")
 
-		store := errStubStore{wantErr}
+		store := errStubStore{Tasks{
+			{ID: 1, Title: "Task 1", Status: TaskStatusTodo},
+			{ID: 2, Title: "Task 2", Status: TaskStatusTodo},
+		}, wantErr}
+
 		service := Service{&store}
 
 		got, err := service.GetTasks()
