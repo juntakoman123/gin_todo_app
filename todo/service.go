@@ -4,6 +4,7 @@ type Service interface {
 	GetTasks() (Tasks, error)
 	AddTask(task Task) (Task, error)
 	DeleteTask(id TaskID) error
+	UpdateTask(task Task) error
 }
 
 type ImplService struct {

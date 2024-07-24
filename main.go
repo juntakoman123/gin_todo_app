@@ -1,10 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
-	"github.com/juntakoman123/gin_todo_app/config"
 	"github.com/juntakoman123/gin_todo_app/todo"
 )
 
@@ -27,15 +23,15 @@ func (s *inMemoryStore) GetTasks() (todo.Tasks, error) {
 
 func main() {
 
-	store := NewinMemoryStore(tasks)
-	service := todo.NewImplService(store)
-	server := todo.NewServer(service)
+	// store := NewinMemoryStore(tasks)
+	// service := todo.NewImplService(store)
+	// server := todo.NewServer(service)
 
-	cfg, err := config.New()
-	if err != nil {
-		os.Exit(1)
-	}
+	// cfg, err := config.New()
+	// if err != nil {
+	// 	os.Exit(1)
+	// }
 
-	server.Run(fmt.Sprintf(":%d", cfg.Port))
+	// server.Run(fmt.Sprintf(":%d", cfg.Port))
 
 }

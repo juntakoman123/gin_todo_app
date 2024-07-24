@@ -18,6 +18,7 @@ func NewServer(service Service) *gin.Engine {
 	r.GET("/tasks", handler.GetTasks)
 	r.POST("/tasks", handler.PostTask)
 	r.DELETE("/tasks/:id", handler.DeleteTask)
+	r.PUT("/tasks/:id", handler.UpdateTask)
 
 	return r
 
@@ -85,4 +86,18 @@ func (h *handler) DeleteTask(c *gin.Context) {
 
 	c.Status(http.StatusOK)
 
+}
+
+func (h *handler) UpdateTask(c *gin.Context) {
+
+	rawId := c.Param("id")
+	id, _ := strconv.Atoi(rawId)
+
+	var updateTask Task
+	c.BindJSON(&updateTask)
+	updateTask.ID = TaskID(id)
+
+	h.service.UpdateTask(updateTask)
+
+	c.Status(http.StatusOK)
 }

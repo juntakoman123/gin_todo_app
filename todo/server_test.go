@@ -204,6 +204,34 @@ func TestDeleteTask(t *testing.T) {
 
 }
 
+func TestUpdateTask(t *testing.T) {
+
+	t.Run("can update task", func(t *testing.T) {
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		id := 1
+		exampleTask := Task{Title: "Task 1", Status: TaskStatusTodo}
+		taskJson, _ := json.Marshal(exampleTask)
+		exampleTask.ID = TaskID(id)
+
+		service := NewMockService(ctrl)
+		service.EXPECT().UpdateTask(exampleTask).Return(nil).Times(1)
+
+		server := NewServer(service)
+
+		res := httptest.NewRecorder()
+		req := newUpdateTaskRequest(fmt.Sprint(id), strings.NewReader(string(taskJson)))
+
+		server.ServeHTTP(res, req)
+
+		assertStatus(t, res, 200)
+
+	})
+
+}
+
 func newGetTasksRequest() *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, "/tasks", nil)
 	return req
@@ -216,5 +244,10 @@ func newPostTaskRequest(body io.Reader) *http.Request {
 
 func newDeleteTaskRequest(id string) *http.Request {
 	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/tasks/%s", id), nil)
+	return req
+}
+
+func newUpdateTaskRequest(id string, body io.Reader) *http.Request {
+	req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/tasks/%s", id), body)
 	return req
 }
