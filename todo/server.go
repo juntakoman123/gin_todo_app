@@ -44,7 +44,12 @@ func (h *handler) PostTask(c *gin.Context) {
 		return
 	}
 
-	newTask, _ = h.service.AddTask(newTask)
+	newTask, err = h.service.AddTask(newTask)
+
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
 	c.JSON(http.StatusOK, newTask)
 

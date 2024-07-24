@@ -129,6 +129,26 @@ func TestPostTask(t *testing.T) {
 
 		assertStatus(t, res, 400)
 	})
+
+	t.Run("returns a 500 internal server error if the service fails", func(t *testing.T) {
+		exampleTask := Task{Title: "Task 1", Status: TaskStatusTodo}
+		taskJson, _ := json.Marshal(exampleTask)
+
+		service := mockService{
+			postTaskFunc: func(task Task) (Task, error) {
+				return Task{}, errors.New("couldn't add new task")
+			},
+		}
+
+		server := NewServer(&service)
+
+		res := httptest.NewRecorder()
+		req := newPostTaskRequest(strings.NewReader(string(taskJson)))
+
+		server.ServeHTTP(res, req)
+
+		assertStatus(t, res, 500)
+	})
 }
 
 func newGetTasksRequest() *http.Request {
