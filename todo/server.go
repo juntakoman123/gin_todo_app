@@ -39,7 +39,10 @@ func (h *handler) PostTask(c *gin.Context) {
 
 	var newTask Task
 
-	c.BindJSON(&newTask)
+	err := c.BindJSON(&newTask)
+	if err != nil {
+		return
+	}
 
 	newTask, _ = h.service.AddTask(newTask)
 

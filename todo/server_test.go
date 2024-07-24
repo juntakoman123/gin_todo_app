@@ -27,6 +27,8 @@ func (s *mockService) AddTask(task Task) (Task, error) {
 	return s.postTaskFunc(task)
 }
 
+var dummyService = &mockService{}
+
 func TestGetTasks(t *testing.T) {
 
 	t.Run("can get tasks as JSON", func(t *testing.T) {
@@ -114,6 +116,18 @@ func TestPostTask(t *testing.T) {
 
 		assertResponseBody(t, res.Body.String(), string(wantTaskJson))
 
+	})
+
+	t.Run("returns 400 bad request if body is not valid task JSON", func(t *testing.T) {
+
+		server := NewServer(dummyService)
+
+		res := httptest.NewRecorder()
+		req := newPostTaskRequest(strings.NewReader("trouble"))
+
+		server.ServeHTTP(res, req)
+
+		assertStatus(t, res, 400)
 	})
 }
 
