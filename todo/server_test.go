@@ -3,6 +3,7 @@ package todo
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -132,6 +133,73 @@ func TestDeleteTask(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
+		id := 1
+
+		service := NewMockService(ctrl)
+		service.EXPECT().DeleteTask(TaskID(id)).Return(nil).Times(1)
+
+		server := NewServer(service)
+
+		res := httptest.NewRecorder()
+		req := newDeleteTaskRequest(fmt.Sprint(id))
+
+		server.ServeHTTP(res, req)
+
+		assertStatus(t, res, 200)
+	})
+
+	t.Run("returns 400 bad request if id param is not valid ", func(t *testing.T) {
+
+		id := "trouble"
+
+		server := NewServer(nil)
+
+		res := httptest.NewRecorder()
+		req := newDeleteTaskRequest(id)
+
+		server.ServeHTTP(res, req)
+
+		assertStatus(t, res, 400)
+	})
+
+	t.Run("returns 404 not found if task does not exist ", func(t *testing.T) {
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		id := 1
+
+		service := NewMockService(ctrl)
+		service.EXPECT().DeleteTask(TaskID(id)).Return(ErrTaskNotFound).Times(1)
+
+		server := NewServer(service)
+
+		res := httptest.NewRecorder()
+		req := newDeleteTaskRequest(fmt.Sprint(id))
+
+		server.ServeHTTP(res, req)
+
+		assertStatus(t, res, 404)
+	})
+
+	t.Run("returns a 500 internal server error if the service fails", func(t *testing.T) {
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		id := 1
+
+		service := NewMockService(ctrl)
+		service.EXPECT().DeleteTask(TaskID(id)).Return(errors.New("couldn't delete task")).Times(1)
+
+		server := NewServer(service)
+
+		res := httptest.NewRecorder()
+		req := newDeleteTaskRequest(fmt.Sprint(id))
+
+		server.ServeHTTP(res, req)
+
+		assertStatus(t, res, 500)
 	})
 
 }
@@ -143,5 +211,10 @@ func newGetTasksRequest() *http.Request {
 
 func newPostTaskRequest(body io.Reader) *http.Request {
 	req, _ := http.NewRequest(http.MethodPost, "/tasks", body)
+	return req
+}
+
+func newDeleteTaskRequest(id string) *http.Request {
+	req, _ := http.NewRequest(http.MethodDelete, fmt.Sprintf("/tasks/%s", id), nil)
 	return req
 }
