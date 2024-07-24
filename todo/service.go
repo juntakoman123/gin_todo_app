@@ -2,6 +2,7 @@ package todo
 
 type Service interface {
 	GetTasks() (Tasks, error)
+	AddTask(task Task) (Task, error)
 }
 
 type ImplService struct {
@@ -21,4 +22,9 @@ func (s *ImplService) GetTasks() (Tasks, error) {
 	}
 
 	return tasks, nil
+}
+
+func (s *ImplService) AddTask(task Task) (Task, error) {
+
+	return Task{}, nil
 }

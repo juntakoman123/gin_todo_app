@@ -12,6 +12,7 @@ func NewServer(service Service) *gin.Engine {
 
 	r := gin.Default()
 	r.GET("/tasks", handler.GetTasks)
+	r.POST("/tasks", handler.PostTask)
 
 	return r
 
@@ -31,5 +32,17 @@ func (h *handler) GetTasks(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, tasks)
+
+}
+
+func (h *handler) PostTask(c *gin.Context) {
+
+	var newTask Task
+
+	c.BindJSON(&newTask)
+
+	newTask, _ = h.service.AddTask(newTask)
+
+	c.JSON(http.StatusOK, newTask)
 
 }
