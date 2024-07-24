@@ -40,6 +40,7 @@ func (h *handler) PostTask(c *gin.Context) {
 	var newTask Task
 
 	err := c.BindJSON(&newTask)
+
 	if err != nil {
 		return
 	}

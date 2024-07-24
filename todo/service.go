@@ -3,6 +3,7 @@ package todo
 type Service interface {
 	GetTasks() (Tasks, error)
 	AddTask(task Task) (Task, error)
+	DeleteTask(id TaskID) error
 }
 
 type ImplService struct {
@@ -27,4 +28,9 @@ func (s *ImplService) GetTasks() (Tasks, error) {
 func (s *ImplService) AddTask(task Task) (Task, error) {
 
 	return Task{}, nil
+}
+
+func (s *ImplService) DeleteTask(id TaskID) error {
+
+	return nil
 }
