@@ -125,6 +125,17 @@ func TestPostTask(t *testing.T) {
 	})
 }
 
+func TestDeleteTask(t *testing.T) {
+
+	t.Run("can delete task", func(t *testing.T) {
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+	})
+
+}
+
 func newGetTasksRequest() *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, "/tasks", nil)
 	return req
