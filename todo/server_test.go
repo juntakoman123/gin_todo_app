@@ -15,53 +15,62 @@ import (
 
 func TestGetTasks(t *testing.T) {
 
-	t.Run("can get tasks as JSON", func(t *testing.T) {
+	exampleTasks := Tasks{
+		{ID: 1, Title: "Task 1", Status: TaskStatusTodo},
+		{ID: 2, Title: "Task 2", Status: TaskStatusTodo},
+	}
 
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+	tests := []struct {
+		name      string
+		setupMock func(m *MockService)
+		wantCode  int
+		wantBody  string
+	}{
+		{
+			name: "can get tasks as JSON",
+			setupMock: func(m *MockService) {
+				m.EXPECT().GetTasks().Return(exampleTasks, nil).Times(1)
+			},
+			wantCode: http.StatusOK,
+			wantBody: tasksToJson(exampleTasks),
+		},
+		{
+			name: "returns a 500 internal server error if the service fails",
+			setupMock: func(m *MockService) {
+				m.EXPECT().GetTasks().Return(nil, errors.New("couldn't get tasks")).Times(1)
+			},
+			wantCode: http.StatusInternalServerError,
+			wantBody: "",
+		},
+	}
 
-		exampleTasks := Tasks{
-			{ID: 1, Title: "Task 1", Status: TaskStatusTodo},
-			{ID: 2, Title: "Task 2", Status: TaskStatusTodo},
-		}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 
-		tasksJson, _ := json.Marshal(exampleTasks)
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
-		service.EXPECT().GetTasks().Return(exampleTasks, nil).Times(1)
+			service := NewMockService(ctrl)
+			tt.setupMock(service)
 
-		server := NewServer(service)
+			server := NewServer(service)
 
-		res := httptest.NewRecorder()
-		req := newGetTasksRequest()
+			res := httptest.NewRecorder()
+			req := newGetTasksRequest()
 
-		server.ServeHTTP(res, req)
+			server.ServeHTTP(res, req)
 
-		assertStatus(t, res, 200)
+			assertStatus(t, res, tt.wantCode)
+			assertResponseBody(t, res.Body.String(), tt.wantBody)
 
-		assertResponseBody(t, res.Body.String(), string(tasksJson))
+		})
+	}
 
-	})
+}
 
-	t.Run("returns a 500 internal server error if the service fails", func(t *testing.T) {
-
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		service := NewMockService(ctrl)
-		service.EXPECT().GetTasks().Return(Tasks{}, errors.New("couldn't get tasks")).Times(1)
-
-		server := NewServer(service)
-
-		res := httptest.NewRecorder()
-		req := newGetTasksRequest()
-
-		server.ServeHTTP(res, req)
-
-		assertStatus(t, res, 500)
-
-	})
-
+func tasksToJson(tasks Tasks) string {
+	tasksJson, _ := json.Marshal(tasks)
+	return string(tasksJson)
 }
 
 func TestPostTask(t *testing.T) {
