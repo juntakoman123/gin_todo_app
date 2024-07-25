@@ -32,7 +32,7 @@ func TestGetTasks(t *testing.T) {
 				m.EXPECT().GetTasks().Return(exampleTasks, nil).Times(1)
 			},
 			wantCode: http.StatusOK,
-			wantBody: tasksToJson(exampleTasks),
+			wantBody: toJSON(exampleTasks),
 		},
 		{
 			name: "returns a 500 internal server error if the service fails",
@@ -68,71 +68,69 @@ func TestGetTasks(t *testing.T) {
 
 }
 
-func tasksToJson(tasks Tasks) string {
-	tasksJson, _ := json.Marshal(tasks)
-	return string(tasksJson)
-}
-
 func TestPostTask(t *testing.T) {
 
-	t.Run("can add valid task", func(t *testing.T) {
+	inputTask := Task{Title: "Task 1", Status: TaskStatusTodo}
+	wantTask := Task{ID: 1, Title: "Task 1", Status: TaskStatusTodo}
 
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+	tests := []struct {
+		name      string
+		reqBody   string
+		setupMock func(m *MockService)
+		wantCode  int
+		wantBody  string
+	}{
+		{
+			name:    "can add valid task",
+			reqBody: toJSON(inputTask),
+			setupMock: func(m *MockService) {
+				m.EXPECT().AddTask(inputTask).Return(wantTask, nil).Times(1)
+			},
+			wantCode: http.StatusOK,
+			wantBody: toJSON(wantTask),
+		},
+		{
+			name:    "returns 400 bad request if body is not valid task JSON",
+			reqBody: "trouble",
+			setupMock: func(m *MockService) {
+				m.EXPECT().AddTask(gomock.Any()).Times(0)
+			},
+			wantCode: http.StatusBadRequest,
+			wantBody: "",
+		},
+		{
+			name:    "returns a 500 internal server error if the service fails",
+			reqBody: toJSON(inputTask),
+			setupMock: func(m *MockService) {
+				m.EXPECT().AddTask(inputTask).Return(Task{}, errors.New("couldn't add new task")).Times(1)
+			},
+			wantCode: http.StatusInternalServerError,
+			wantBody: "",
+		},
+	}
 
-		exampleTask := Task{Title: "Task 1", Status: TaskStatusTodo}
-		taskJson, _ := json.Marshal(exampleTask)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 
-		wantTask := Task{ID: 1, Title: "Task 1", Status: TaskStatusTodo}
-		wantTaskJson, _ := json.Marshal(wantTask)
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
-		service.EXPECT().AddTask(exampleTask).Return(wantTask, nil).Times(1)
+			service := NewMockService(ctrl)
+			tt.setupMock(service)
 
-		server := NewServer(service)
+			server := NewServer(service)
 
-		res := httptest.NewRecorder()
-		req := newPostTaskRequest(strings.NewReader(string(taskJson)))
+			res := httptest.NewRecorder()
+			req := newPostTaskRequest(tt.reqBody)
 
-		server.ServeHTTP(res, req)
+			server.ServeHTTP(res, req)
 
-		assertStatus(t, res, 200)
-		assertResponseBody(t, res.Body.String(), string(wantTaskJson))
+			assertStatus(t, res, tt.wantCode)
+			assertResponseBody(t, res.Body.String(), tt.wantBody)
 
-	})
+		})
+	}
 
-	t.Run("returns 400 bad request if body is not valid task JSON", func(t *testing.T) {
-
-		server := NewServer(nil)
-
-		res := httptest.NewRecorder()
-		req := newPostTaskRequest(strings.NewReader("trouble"))
-
-		server.ServeHTTP(res, req)
-
-		assertStatus(t, res, 400)
-	})
-
-	t.Run("returns a 500 internal server error if the service fails", func(t *testing.T) {
-
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		exampleTask := Task{Title: "Task 1", Status: TaskStatusTodo}
-		taskJson, _ := json.Marshal(exampleTask)
-
-		service := NewMockService(ctrl)
-		service.EXPECT().AddTask(exampleTask).Return(Task{}, errors.New("couldn't add new task")).Times(1)
-
-		server := NewServer(service)
-
-		res := httptest.NewRecorder()
-		req := newPostTaskRequest(strings.NewReader(string(taskJson)))
-
-		server.ServeHTTP(res, req)
-
-		assertStatus(t, res, 500)
-	})
 }
 
 func TestDeleteTask(t *testing.T) {
@@ -316,13 +314,18 @@ func TestUpdateTask(t *testing.T) {
 
 }
 
+func toJSON(v any) string {
+	json, _ := json.Marshal(v)
+	return string(json)
+}
+
 func newGetTasksRequest() *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, "/tasks", nil)
 	return req
 }
 
-func newPostTaskRequest(body io.Reader) *http.Request {
-	req, _ := http.NewRequest(http.MethodPost, "/tasks", body)
+func newPostTaskRequest(body string) *http.Request {
+	req, _ := http.NewRequest(http.MethodPost, "/tasks", strings.NewReader(body))
 	return req
 }
 
