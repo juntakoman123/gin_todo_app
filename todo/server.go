@@ -43,15 +43,13 @@ func (h *handler) GetTasks(c *gin.Context) {
 
 func (h *handler) PostTask(c *gin.Context) {
 
-	var newTask Task
-
-	err := c.BindJSON(&newTask)
+	task, err := h.parseTask(c)
 
 	if err != nil {
 		return
 	}
 
-	newTask, err = h.service.AddTask(newTask)
+	newTask, err := h.service.AddTask(task)
 
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
@@ -64,7 +62,7 @@ func (h *handler) PostTask(c *gin.Context) {
 
 func (h *handler) DeleteTask(c *gin.Context) {
 
-	id, err := h.getIdFromParam(c)
+	id, err := h.parseID(c)
 
 	if err != nil {
 		c.Status(http.StatusBadRequest)
@@ -89,15 +87,14 @@ func (h *handler) DeleteTask(c *gin.Context) {
 
 func (h *handler) UpdateTask(c *gin.Context) {
 
-	id, err := h.getIdFromParam(c)
+	id, err := h.parseID(c)
 
 	if err != nil {
 		c.Status(http.StatusBadRequest)
 		return
 	}
 
-	var updateTask Task
-	err = c.BindJSON(&updateTask)
+	updateTask, err := h.parseTask(c)
 
 	if err != nil {
 		return
@@ -120,7 +117,7 @@ func (h *handler) UpdateTask(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-func (h *handler) getIdFromParam(c *gin.Context) (TaskID, error) {
+func (h *handler) parseID(c *gin.Context) (TaskID, error) {
 	rawId := c.Param("id")
 	id, err := strconv.Atoi(rawId)
 
@@ -129,4 +126,14 @@ func (h *handler) getIdFromParam(c *gin.Context) (TaskID, error) {
 	}
 
 	return TaskID(id), nil
+}
+
+func (h *handler) parseTask(c *gin.Context) (Task, error) {
+	var task Task
+
+	if err := c.BindJSON(&task); err != nil {
+		return Task{}, err
+	}
+
+	return task, nil
 }
