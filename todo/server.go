@@ -73,7 +73,7 @@ func (h *handler) DeleteTask(c *gin.Context) {
 
 	err = h.service.DeleteTask(id)
 
-	if err == ErrTaskNotFound {
+	if errors.Is(err, ErrTaskNotFound) {
 		c.Status(http.StatusNotFound)
 		return
 	}
@@ -107,7 +107,7 @@ func (h *handler) UpdateTask(c *gin.Context) {
 
 	err = h.service.UpdateTask(updateTask)
 
-	if err == ErrTaskNotFound {
+	if errors.Is(err, ErrTaskNotFound) {
 		c.Status(http.StatusNotFound)
 		return
 	}
