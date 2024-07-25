@@ -230,6 +230,81 @@ func TestUpdateTask(t *testing.T) {
 
 	})
 
+	t.Run("returns 400 bad request if id param is not valid ", func(t *testing.T) {
+
+		exampleTask := Task{Title: "Task 1", Status: TaskStatusTodo}
+		taskJson, _ := json.Marshal(exampleTask)
+
+		server := NewServer(nil)
+
+		res := httptest.NewRecorder()
+		req := newUpdateTaskRequest("trouble", strings.NewReader(string(taskJson)))
+
+		server.ServeHTTP(res, req)
+
+		assertStatus(t, res, 400)
+	})
+
+	t.Run("returns 400 bad request if body is not valid task", func(t *testing.T) {
+
+		server := NewServer(nil)
+
+		res := httptest.NewRecorder()
+		req := newUpdateTaskRequest("1", strings.NewReader("trouble"))
+
+		server.ServeHTTP(res, req)
+
+		assertStatus(t, res, 400)
+	})
+
+	t.Run("returns 404 not found if task does not exist ", func(t *testing.T) {
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		exampleTask := Task{Title: "Task 1", Status: TaskStatusTodo}
+		taskJson, _ := json.Marshal(exampleTask)
+
+		id := 1
+		exampleTask.ID = TaskID(id)
+
+		service := NewMockService(ctrl)
+		service.EXPECT().UpdateTask(exampleTask).Return(ErrTaskNotFound).Times(1)
+
+		server := NewServer(service)
+
+		res := httptest.NewRecorder()
+		req := newUpdateTaskRequest(fmt.Sprint(id), strings.NewReader(string(taskJson)))
+
+		server.ServeHTTP(res, req)
+
+		assertStatus(t, res, 404)
+	})
+
+	t.Run("returns a 500 internal server error if the service fails", func(t *testing.T) {
+
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		exampleTask := Task{Title: "Task 1", Status: TaskStatusTodo}
+		taskJson, _ := json.Marshal(exampleTask)
+
+		id := 1
+		exampleTask.ID = TaskID(id)
+
+		service := NewMockService(ctrl)
+		service.EXPECT().UpdateTask(exampleTask).Return(errors.New("couldn't update task")).Times(1)
+
+		server := NewServer(service)
+
+		res := httptest.NewRecorder()
+		req := newUpdateTaskRequest(fmt.Sprint(id), strings.NewReader(string(taskJson)))
+
+		server.ServeHTTP(res, req)
+
+		assertStatus(t, res, 500)
+	})
+
 }
 
 func newGetTasksRequest() *http.Request {

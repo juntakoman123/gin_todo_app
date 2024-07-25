@@ -91,13 +91,33 @@ func (h *handler) DeleteTask(c *gin.Context) {
 func (h *handler) UpdateTask(c *gin.Context) {
 
 	rawId := c.Param("id")
-	id, _ := strconv.Atoi(rawId)
+	id, err := strconv.Atoi(rawId)
+
+	if err != nil {
+		c.Status(http.StatusBadRequest)
+		return
+	}
 
 	var updateTask Task
-	c.BindJSON(&updateTask)
+	err = c.BindJSON(&updateTask)
+
+	if err != nil {
+		return
+	}
+
 	updateTask.ID = TaskID(id)
 
-	h.service.UpdateTask(updateTask)
+	err = h.service.UpdateTask(updateTask)
+
+	if err == ErrTaskNotFound {
+		c.Status(http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
 	c.Status(http.StatusOK)
 }
