@@ -64,8 +64,7 @@ func (h *handler) PostTask(c *gin.Context) {
 
 func (h *handler) DeleteTask(c *gin.Context) {
 
-	rawId := c.Param("id")
-	id, err := strconv.Atoi(rawId)
+	id, err := h.getIdFromParam(c)
 
 	if err != nil {
 		c.Status(http.StatusBadRequest)
@@ -90,8 +89,7 @@ func (h *handler) DeleteTask(c *gin.Context) {
 
 func (h *handler) UpdateTask(c *gin.Context) {
 
-	rawId := c.Param("id")
-	id, err := strconv.Atoi(rawId)
+	id, err := h.getIdFromParam(c)
 
 	if err != nil {
 		c.Status(http.StatusBadRequest)
@@ -120,4 +118,15 @@ func (h *handler) UpdateTask(c *gin.Context) {
 	}
 
 	c.Status(http.StatusOK)
+}
+
+func (h *handler) getIdFromParam(c *gin.Context) (TaskID, error) {
+	rawId := c.Param("id")
+	id, err := strconv.Atoi(rawId)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return TaskID(id), nil
 }
