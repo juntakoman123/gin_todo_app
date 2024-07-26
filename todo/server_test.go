@@ -135,79 +135,65 @@ func TestPostTask(t *testing.T) {
 
 func TestDeleteTask(t *testing.T) {
 
-	t.Run("can delete task", func(t *testing.T) {
+	tests := []struct {
+		name      string
+		id        string
+		setupMock func(m *MockService)
+		wantCode  int
+	}{
+		{
+			name: "can delete task",
+			id:   "1",
+			setupMock: func(m *MockService) {
+				m.EXPECT().DeleteTask(TaskID(1)).Return(nil).Times(1)
+			},
+			wantCode: http.StatusOK,
+		},
+		{
+			name: "returns 400 bad request if id param is not valid",
+			id:   "trouble",
+			setupMock: func(m *MockService) {
+				m.EXPECT().AddTask(gomock.Any()).Times(0)
+			},
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name: "returns 404 not found if task does not exist",
+			id:   "1",
+			setupMock: func(m *MockService) {
+				m.EXPECT().DeleteTask(TaskID(1)).Return(ErrTaskNotFound).Times(1)
+			},
+			wantCode: http.StatusNotFound,
+		},
+		{
+			name: "returns a 500 internal server error if the service fails",
+			id:   "1",
+			setupMock: func(m *MockService) {
+				m.EXPECT().DeleteTask(TaskID(1)).Return(errors.New("couldn't delete task")).Times(1)
+			},
+			wantCode: http.StatusInternalServerError,
+		},
+	}
 
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 
-		id := 1
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-		service := NewMockService(ctrl)
-		service.EXPECT().DeleteTask(TaskID(id)).Return(nil).Times(1)
+			service := NewMockService(ctrl)
+			tt.setupMock(service)
 
-		server := NewServer(service)
+			server := NewServer(service)
 
-		res := httptest.NewRecorder()
-		req := newDeleteTaskRequest(fmt.Sprint(id))
+			res := httptest.NewRecorder()
+			req := newDeleteTaskRequest(tt.id)
 
-		server.ServeHTTP(res, req)
+			server.ServeHTTP(res, req)
 
-		assertStatus(t, res, 200)
-	})
-
-	t.Run("returns 400 bad request if id param is not valid ", func(t *testing.T) {
-
-		id := "trouble"
-
-		server := NewServer(nil)
-
-		res := httptest.NewRecorder()
-		req := newDeleteTaskRequest(id)
-
-		server.ServeHTTP(res, req)
-
-		assertStatus(t, res, 400)
-	})
-
-	t.Run("returns 404 not found if task does not exist ", func(t *testing.T) {
-
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		id := 1
-
-		service := NewMockService(ctrl)
-		service.EXPECT().DeleteTask(TaskID(id)).Return(ErrTaskNotFound).Times(1)
-
-		server := NewServer(service)
-
-		res := httptest.NewRecorder()
-		req := newDeleteTaskRequest(fmt.Sprint(id))
-
-		server.ServeHTTP(res, req)
-
-		assertStatus(t, res, 404)
-	})
-
-	t.Run("returns a 500 internal server error if the service fails", func(t *testing.T) {
-
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		id := 1
-
-		service := NewMockService(ctrl)
-		service.EXPECT().DeleteTask(TaskID(id)).Return(errors.New("couldn't delete task")).Times(1)
-
-		server := NewServer(service)
-
-		res := httptest.NewRecorder()
-		req := newDeleteTaskRequest(fmt.Sprint(id))
-
-		server.ServeHTTP(res, req)
-
-		assertStatus(t, res, 500)
-	})
+			assertStatus(t, res, tt.wantCode)
+		})
+	}
 
 }
 
@@ -250,6 +236,7 @@ func TestUpdateTask(t *testing.T) {
 		server.ServeHTTP(res, req)
 
 		assertStatus(t, res, 400)
+
 	})
 
 	t.Run("returns 400 bad request if body is not valid task", func(t *testing.T) {
