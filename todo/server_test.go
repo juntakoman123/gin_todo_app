@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -199,105 +198,81 @@ func TestDeleteTask(t *testing.T) {
 
 func TestUpdateTask(t *testing.T) {
 
-	t.Run("can update task", func(t *testing.T) {
+	inputTask := Task{Title: "Task 1", Status: TaskStatusTodo}
 
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
+	tests := []struct {
+		name      string
+		id        string
+		reqBody   string
+		setupMock func(m *MockService)
+		wantCode  int
+	}{
+		{
+			name:    "can update task",
+			id:      "1",
+			reqBody: toJSON(inputTask),
+			setupMock: func(m *MockService) {
+				m.EXPECT().UpdateTask(Task{ID: 1, Title: "Task 1", Status: TaskStatusTodo}).Return(nil).Times(1)
+			},
+			wantCode: http.StatusOK,
+		},
+		{
+			name:    "returns 400 bad request if id param is not valid",
+			id:      "trouble",
+			reqBody: toJSON(inputTask),
+			setupMock: func(m *MockService) {
+				m.EXPECT().UpdateTask(gomock.Any()).Times(0)
+			},
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:    "returns 400 bad request if body is not valid task",
+			id:      "1",
+			reqBody: "trouble",
+			setupMock: func(m *MockService) {
+				m.EXPECT().UpdateTask(gomock.Any()).Times(0)
+			},
+			wantCode: http.StatusBadRequest,
+		},
+		{
+			name:    "returns 404 not found if task does not exist",
+			id:      "1",
+			reqBody: toJSON(inputTask),
+			setupMock: func(m *MockService) {
+				m.EXPECT().UpdateTask(Task{ID: 1, Title: "Task 1", Status: TaskStatusTodo}).Return(ErrTaskNotFound).Times(1)
+			},
+			wantCode: http.StatusNotFound,
+		},
+		{
+			name:    "returns a 500 internal server error if the service fails",
+			id:      "1",
+			reqBody: toJSON(inputTask),
+			setupMock: func(m *MockService) {
+				m.EXPECT().UpdateTask(Task{ID: 1, Title: "Task 1", Status: TaskStatusTodo}).Return(errors.New("couldn't update task")).Times(1)
+			},
+			wantCode: http.StatusInternalServerError,
+		},
+	}
 
-		id := 1
-		exampleTask := Task{Title: "Task 1", Status: TaskStatusTodo}
-		taskJson, _ := json.Marshal(exampleTask)
-		exampleTask.ID = TaskID(id)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 
-		service := NewMockService(ctrl)
-		service.EXPECT().UpdateTask(exampleTask).Return(nil).Times(1)
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
 
-		server := NewServer(service)
+			service := NewMockService(ctrl)
+			tt.setupMock(service)
 
-		res := httptest.NewRecorder()
-		req := newUpdateTaskRequest(fmt.Sprint(id), strings.NewReader(string(taskJson)))
+			server := NewServer(service)
 
-		server.ServeHTTP(res, req)
+			res := httptest.NewRecorder()
+			req := newUpdateTaskRequest(tt.id, tt.reqBody)
 
-		assertStatus(t, res, 200)
+			server.ServeHTTP(res, req)
 
-	})
-
-	t.Run("returns 400 bad request if id param is not valid ", func(t *testing.T) {
-
-		exampleTask := Task{Title: "Task 1", Status: TaskStatusTodo}
-		taskJson, _ := json.Marshal(exampleTask)
-
-		server := NewServer(nil)
-
-		res := httptest.NewRecorder()
-		req := newUpdateTaskRequest("trouble", strings.NewReader(string(taskJson)))
-
-		server.ServeHTTP(res, req)
-
-		assertStatus(t, res, 400)
-
-	})
-
-	t.Run("returns 400 bad request if body is not valid task", func(t *testing.T) {
-
-		server := NewServer(nil)
-
-		res := httptest.NewRecorder()
-		req := newUpdateTaskRequest("1", strings.NewReader("trouble"))
-
-		server.ServeHTTP(res, req)
-
-		assertStatus(t, res, 400)
-	})
-
-	t.Run("returns 404 not found if task does not exist ", func(t *testing.T) {
-
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		exampleTask := Task{Title: "Task 1", Status: TaskStatusTodo}
-		taskJson, _ := json.Marshal(exampleTask)
-
-		id := 1
-		exampleTask.ID = TaskID(id)
-
-		service := NewMockService(ctrl)
-		service.EXPECT().UpdateTask(exampleTask).Return(ErrTaskNotFound).Times(1)
-
-		server := NewServer(service)
-
-		res := httptest.NewRecorder()
-		req := newUpdateTaskRequest(fmt.Sprint(id), strings.NewReader(string(taskJson)))
-
-		server.ServeHTTP(res, req)
-
-		assertStatus(t, res, 404)
-	})
-
-	t.Run("returns a 500 internal server error if the service fails", func(t *testing.T) {
-
-		ctrl := gomock.NewController(t)
-		defer ctrl.Finish()
-
-		exampleTask := Task{Title: "Task 1", Status: TaskStatusTodo}
-		taskJson, _ := json.Marshal(exampleTask)
-
-		id := 1
-		exampleTask.ID = TaskID(id)
-
-		service := NewMockService(ctrl)
-		service.EXPECT().UpdateTask(exampleTask).Return(errors.New("couldn't update task")).Times(1)
-
-		server := NewServer(service)
-
-		res := httptest.NewRecorder()
-		req := newUpdateTaskRequest(fmt.Sprint(id), strings.NewReader(string(taskJson)))
-
-		server.ServeHTTP(res, req)
-
-		assertStatus(t, res, 500)
-	})
+			assertStatus(t, res, tt.wantCode)
+		})
+	}
 
 }
 
@@ -321,7 +296,7 @@ func newDeleteTaskRequest(id string) *http.Request {
 	return req
 }
 
-func newUpdateTaskRequest(id string, body io.Reader) *http.Request {
-	req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/tasks/%s", id), body)
+func newUpdateTaskRequest(id string, body string) *http.Request {
+	req, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/tasks/%s", id), strings.NewReader(body))
 	return req
 }
