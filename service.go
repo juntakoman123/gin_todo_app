@@ -1,4 +1,4 @@
-package todo
+package main
 
 type Service interface {
 	GetTasks() (Tasks, error)

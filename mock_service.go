@@ -2,7 +2,7 @@
 // Source: service.go
 
 // Package todo is a generated GoMock package.
-package todo
+package main
 
 import (
 	reflect "reflect"
