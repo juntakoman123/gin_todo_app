@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestNew(t *testing.T) {
+func TestNewConfig(t *testing.T) {
 	wantPort := 3333
 	t.Setenv("PORT", fmt.Sprint(wantPort))
 
