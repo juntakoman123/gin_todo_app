@@ -1,37 +1,37 @@
 package main
 
-type Service interface {
+type TasKService interface {
 	GetTasks() (Tasks, error)
 	AddTask(task Task) (Task, error)
 	DeleteTask(id TaskID) error
 	UpdateTask(task Task) error
 }
 
-type ImplService struct {
-	Store Store
-}
+// type ImplService struct {
+// 	Store Store
+// }
 
-func NewImplService(store Store) *ImplService {
-	return &ImplService{store}
-}
+// func NewImplService(store Store) *ImplService {
+// 	return &ImplService{store}
+// }
 
-func (s *ImplService) GetTasks() (Tasks, error) {
+// func (s *ImplService) GetTasks() (Tasks, error) {
 
-	tasks, err := s.Store.GetTasks()
+// 	tasks, err := s.Store.GetTasks()
 
-	if err != nil {
-		return Tasks{}, err
-	}
+// 	if err != nil {
+// 		return Tasks{}, err
+// 	}
 
-	return tasks, nil
-}
+// 	return tasks, nil
+// }
 
-func (s *ImplService) AddTask(task Task) (Task, error) {
+// func (s *ImplService) AddTask(task Task) (Task, error) {
 
-	return Task{}, nil
-}
+// 	return Task{}, nil
+// }
 
-func (s *ImplService) DeleteTask(id TaskID) error {
+// func (s *ImplService) DeleteTask(id TaskID) error {
 
-	return nil
-}
+// 	return nil
+// }

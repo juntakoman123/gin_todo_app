@@ -10,7 +10,7 @@ import (
 
 var ErrTaskNotFound = errors.New("task not found")
 
-func NewServer(service Service) *gin.Engine {
+func NewServer(service TasKService) *gin.Engine {
 
 	handler := handler{service}
 
@@ -25,12 +25,12 @@ func NewServer(service Service) *gin.Engine {
 }
 
 type handler struct {
-	service Service
+	taskService TasKService
 }
 
 func (h *handler) GetTasks(c *gin.Context) {
 
-	tasks, err := h.service.GetTasks()
+	tasks, err := h.taskService.GetTasks()
 
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
@@ -49,7 +49,7 @@ func (h *handler) PostTask(c *gin.Context) {
 		return
 	}
 
-	newTask, err := h.service.AddTask(task)
+	newTask, err := h.taskService.AddTask(task)
 
 	if err != nil {
 		c.Status(http.StatusInternalServerError)
@@ -69,7 +69,7 @@ func (h *handler) DeleteTask(c *gin.Context) {
 		return
 	}
 
-	err = h.service.DeleteTask(id)
+	err = h.taskService.DeleteTask(id)
 
 	if errors.Is(err, ErrTaskNotFound) {
 		c.Status(http.StatusNotFound)
@@ -102,7 +102,7 @@ func (h *handler) UpdateTask(c *gin.Context) {
 
 	updateTask.ID = id
 
-	err = h.service.UpdateTask(updateTask)
+	err = h.taskService.UpdateTask(updateTask)
 
 	if errors.Is(err, ErrTaskNotFound) {
 		c.Status(http.StatusNotFound)

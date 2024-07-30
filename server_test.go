@@ -21,13 +21,13 @@ func TestGetTasks(t *testing.T) {
 
 	tests := []struct {
 		name      string
-		setupMock func(m *MockService)
+		setupMock func(m *MockTasKService)
 		wantCode  int
 		wantBody  string
 	}{
 		{
 			name: "can get tasks as JSON",
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().GetTasks().Return(exampleTasks, nil).Times(1)
 			},
 			wantCode: http.StatusOK,
@@ -35,7 +35,7 @@ func TestGetTasks(t *testing.T) {
 		},
 		{
 			name: "returns a 500 internal server error if the service fails",
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().GetTasks().Return(nil, errors.New("couldn't get tasks")).Times(1)
 			},
 			wantCode: http.StatusInternalServerError,
@@ -49,7 +49,7 @@ func TestGetTasks(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			service := NewMockService(ctrl)
+			service := NewMockTasKService(ctrl)
 			tt.setupMock(service)
 
 			server := NewServer(service)
@@ -75,14 +75,14 @@ func TestPostTask(t *testing.T) {
 	tests := []struct {
 		name      string
 		reqBody   string
-		setupMock func(m *MockService)
+		setupMock func(m *MockTasKService)
 		wantCode  int
 		wantBody  string
 	}{
 		{
 			name:    "can add valid task",
 			reqBody: toJSON(inputTask),
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().AddTask(inputTask).Return(wantTask, nil).Times(1)
 			},
 			wantCode: http.StatusOK,
@@ -91,7 +91,7 @@ func TestPostTask(t *testing.T) {
 		{
 			name:    "returns 400 bad request if body is not valid task JSON",
 			reqBody: "trouble",
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().AddTask(gomock.Any()).Times(0)
 			},
 			wantCode: http.StatusBadRequest,
@@ -100,7 +100,7 @@ func TestPostTask(t *testing.T) {
 		{
 			name:    "returns a 500 internal server error if the service fails",
 			reqBody: toJSON(inputTask),
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().AddTask(inputTask).Return(Task{}, errors.New("couldn't add new task")).Times(1)
 			},
 			wantCode: http.StatusInternalServerError,
@@ -114,7 +114,7 @@ func TestPostTask(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			service := NewMockService(ctrl)
+			service := NewMockTasKService(ctrl)
 			tt.setupMock(service)
 
 			server := NewServer(service)
@@ -137,13 +137,13 @@ func TestDeleteTask(t *testing.T) {
 	tests := []struct {
 		name      string
 		id        string
-		setupMock func(m *MockService)
+		setupMock func(m *MockTasKService)
 		wantCode  int
 	}{
 		{
 			name: "can delete task",
 			id:   "1",
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().DeleteTask(TaskID(1)).Return(nil).Times(1)
 			},
 			wantCode: http.StatusOK,
@@ -151,7 +151,7 @@ func TestDeleteTask(t *testing.T) {
 		{
 			name: "returns 400 bad request if id param is not valid",
 			id:   "trouble",
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().AddTask(gomock.Any()).Times(0)
 			},
 			wantCode: http.StatusBadRequest,
@@ -159,7 +159,7 @@ func TestDeleteTask(t *testing.T) {
 		{
 			name: "returns 404 not found if task does not exist",
 			id:   "1",
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().DeleteTask(TaskID(1)).Return(ErrTaskNotFound).Times(1)
 			},
 			wantCode: http.StatusNotFound,
@@ -167,7 +167,7 @@ func TestDeleteTask(t *testing.T) {
 		{
 			name: "returns a 500 internal server error if the service fails",
 			id:   "1",
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().DeleteTask(TaskID(1)).Return(errors.New("couldn't delete task")).Times(1)
 			},
 			wantCode: http.StatusInternalServerError,
@@ -180,7 +180,7 @@ func TestDeleteTask(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			service := NewMockService(ctrl)
+			service := NewMockTasKService(ctrl)
 			tt.setupMock(service)
 
 			server := NewServer(service)
@@ -204,14 +204,14 @@ func TestUpdateTask(t *testing.T) {
 		name      string
 		id        string
 		reqBody   string
-		setupMock func(m *MockService)
+		setupMock func(m *MockTasKService)
 		wantCode  int
 	}{
 		{
 			name:    "can update task",
 			id:      "1",
 			reqBody: toJSON(inputTask),
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().UpdateTask(Task{ID: 1, Title: "Task 1", Status: TaskStatusTodo}).Return(nil).Times(1)
 			},
 			wantCode: http.StatusOK,
@@ -220,7 +220,7 @@ func TestUpdateTask(t *testing.T) {
 			name:    "returns 400 bad request if id param is not valid",
 			id:      "trouble",
 			reqBody: toJSON(inputTask),
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().UpdateTask(gomock.Any()).Times(0)
 			},
 			wantCode: http.StatusBadRequest,
@@ -229,7 +229,7 @@ func TestUpdateTask(t *testing.T) {
 			name:    "returns 400 bad request if body is not valid task",
 			id:      "1",
 			reqBody: "trouble",
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().UpdateTask(gomock.Any()).Times(0)
 			},
 			wantCode: http.StatusBadRequest,
@@ -238,7 +238,7 @@ func TestUpdateTask(t *testing.T) {
 			name:    "returns 404 not found if task does not exist",
 			id:      "1",
 			reqBody: toJSON(inputTask),
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().UpdateTask(Task{ID: 1, Title: "Task 1", Status: TaskStatusTodo}).Return(ErrTaskNotFound).Times(1)
 			},
 			wantCode: http.StatusNotFound,
@@ -247,7 +247,7 @@ func TestUpdateTask(t *testing.T) {
 			name:    "returns a 500 internal server error if the service fails",
 			id:      "1",
 			reqBody: toJSON(inputTask),
-			setupMock: func(m *MockService) {
+			setupMock: func(m *MockTasKService) {
 				m.EXPECT().UpdateTask(Task{ID: 1, Title: "Task 1", Status: TaskStatusTodo}).Return(errors.New("couldn't update task")).Times(1)
 			},
 			wantCode: http.StatusInternalServerError,
@@ -260,7 +260,7 @@ func TestUpdateTask(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			service := NewMockService(ctrl)
+			service := NewMockTasKService(ctrl)
 			tt.setupMock(service)
 
 			server := NewServer(service)
